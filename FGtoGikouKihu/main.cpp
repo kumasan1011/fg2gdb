@@ -55,38 +55,22 @@ T0
 
 ================================================================================*/
 
-
+#include <algorithm>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <vector>
 #include <filesystem>
-#include <crtdbg.h>
-#include <string.h>
-
+#include <cstring>
 
 #include "main.h"
 
 using namespace std;
-namespace sys = std::tr2::sys;
+namespace sys = std::filesystem;
 
-#define Test_directory "C:/Users/daruma/Desktop/wdoor2015/2015/"
-//"C:/Users/daruma/Desktop/wdoor2015/TEST/"
-//"c:/book/"      
-//"C:/Users/daruma/Desktop/wdoor2015/TEST/"
 #define MAX_data 100000
-//#define TEST
-
-#ifdef TEST
-#define TEST_outputfile  "C:/Users/daruma/Desktop/records.txt"  
-#else
 #define TEST_outputfile "records.txt"
-#endif
-//"c:/book/record.txt"
-//"C:/Users/daruma/Desktop/records.txt"  
-//"./records.txt"
-
 
 typedef string filepath;
 std::vector<filepath> pathlist;//ファイルパスのリスト
@@ -172,7 +156,6 @@ int write_game_info(std::string filename,GameData GD) {
 	//2行目
 	// <CSA形式の指し手(1手6文字)を一行に並べたもの>(空行は入れなくていいはずである)
 	for (auto move : GD.moves) {
-		_ASSERT(move.size() == 6|| move.size() == 0);
 		fs << move;
 	}
 	fs << endl;
@@ -200,8 +183,7 @@ int read_game_info(std::vector<filepath>& list_) {
 			read_all_lines(filename, lines)
 			) {
 			cout << "read error" << endl; continue;
-		}//ここがおかしい！
-		 //ここまでおｋ
+		}
 
 		for (auto line : lines) {
 
@@ -223,8 +205,7 @@ int read_game_info(std::vector<filepath>& list_) {
 				int num = ret - str+1;
 
 				gd.black_rate=std::stoi(line.substr(num));
-				_ASSERT(0<gd.black_rate&&gd.black_rate < 10000);//おかしな値になっていないか
-				if (gd.black_rate < 2600) goto NO_WRITE;//rate 3000未満であれば書き出さない
+				if (gd.black_rate < 3000) goto NO_WRITE;//rate 3000未満であれば書き出さない
 			}
 			else if (line.find("white_rate") != string::npos) {
 
@@ -235,10 +216,7 @@ int read_game_info(std::vector<filepath>& list_) {
 				int num = ret - str + 1;
 
 				gd.white_rate = std::stoi(line.substr(num));
-				//Rは4000以下であるとしていたがelmoが出てきたのでこれではだめになってしまった(;^_^Aコンピュータ将棋の進歩は早いなぁ
-				//まあさすがに1万は超えないだろう...
-				_ASSERT(0<gd.white_rate&&gd.white_rate < 10000);
-				if (gd.white_rate < 2600) goto NO_WRITE;
+				if (gd.white_rate < 3000) goto NO_WRITE;
 			}
 			else if (line.find("summary") != string::npos) {
 
@@ -260,10 +238,6 @@ int read_game_info(std::vector<filepath>& list_) {
 					int c = ':';
 					const char *ret = strrchr(str, c);//最後の：より後ろの文字列
 
-
-				
-					
-					
 					string summary = string(ret);
 					if (summary.find("lose") != string::npos) {
 						gd.VorD = 1;//先手の勝ち
@@ -281,7 +255,6 @@ int read_game_info(std::vector<filepath>& list_) {
 				string move_str = line.substr(1,6); //コメント付きを排除
 				gd.moves.push_back(move_str);
 				gd.plys++;
-				_ASSERT(gd.plys <= 257);
 			}
 
 
@@ -312,23 +285,11 @@ void useage() {
 
 }
 
-
-//--------------------------main関数！！------------------------------------------------------
 int main(int argc, char **argv) {
 
-#ifdef TEST
-	find_csa(Test_directory, pathlist);
-
-#endif
-#ifndef TEST
 	if (argc <= 1) {useage(); exit(1);}
-
-	//string filepath_command=string(argv[1]);
 	find_csa(argv[1], pathlist);
-
-#endif
 	read_game_info(pathlist);
 
-	cout << "finish! writedgames"<<writed_games << endl;
-
+	cout << "finish! writedgames"<< writed_games << endl;
 }
